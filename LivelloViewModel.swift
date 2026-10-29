@@ -200,6 +200,7 @@ final class Speaker: ObservableObject {
 
     func di(_ testo: String) {
         synthesizer.stopSpeaking(at: .immediate)
+        Self.preparaAudio()
         let utterance = AVSpeechUtterance(string: testo)
         utterance.voice = AVSpeechSynthesisVoice(language: "it-IT")
         utterance.rate = 0.4
@@ -209,5 +210,14 @@ final class Speaker: ObservableObject {
 
     func ferma() {
         synthesizer.stopSpeaking(at: .immediate)
+    }
+
+    /// Senza questa impostazione la voce non si sente con l'iPhone in modalità silenziosa.
+    /// Usa la stessa configurazione del microfono, così l'audio non cambia tra ascolto e parlato.
+    private static func preparaAudio() {
+        let sessione = AVAudioSession.sharedInstance()
+        try? sessione.setCategory(.playAndRecord, mode: .default,
+                                  options: [.defaultToSpeaker, .duckOthers, .allowBluetoothA2DP])
+        try? sessione.setActive(true)
     }
 }
