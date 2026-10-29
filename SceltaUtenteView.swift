@@ -43,8 +43,7 @@ struct SceltaUtenteView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                Text("🦜")
-                    .font(.system(size: 100))
+                PippoView(altezza: 150)
                     .padding(.top, 30)
 
                 Text("Chi sta usando Pippo?")
