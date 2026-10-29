@@ -2,11 +2,22 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var progresso: Progresso
+    var cambiaUtente: () -> Void = {}
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 22) {
+                    // Torna alla scelta tra genitore e logopedista
+                    HStack {
+                        Spacer()
+                        Button(action: cambiaUtente) {
+                            Label("Cambia utente", systemImage: "person.2.circle.fill")
+                                .font(Tema.titolo(16, .semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
                     HStack(spacing: 12) {
                         Text("🦜").font(.system(size: 90))
                         Text("Ciao! Sono Pippo.\nAiutami a tornare a casa!")

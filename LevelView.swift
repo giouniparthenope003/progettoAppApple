@@ -43,7 +43,7 @@ struct LevelView: View {
         }
         // Salviamo le stelle a fine sfida
         .onChange(of: livello.completato) { _, finito in
-            if finito { progresso.registra(livello.percorso, livello.sfida, stelle: livello.stelle) }
+            if finito { progresso.registraSessione(livello) }
         }
         // Pippo dice la parola da solo (tranne in "Indovina")
         .task(id: livello.indice) {

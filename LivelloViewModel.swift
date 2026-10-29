@@ -17,6 +17,8 @@ final class LivelloViewModel: ObservableObject {
     @Published var feedback: Feedback = .nessuno
     @Published private(set) var confusioniConGemella = 0
     @Published private(set) var altriErrori = 0
+    /// Parole su cui il bambino ha detto la gemella (per il logopedista)
+    @Published private(set) var paroleConfuse: [String] = []
 
     private var tentativiParola = 0
     private let paroleAPartita = 6
@@ -155,6 +157,7 @@ final class LivelloViewModel: ObservableObject {
         indice = 0
         confusioniConGemella = 0
         altriErrori = 0
+        paroleConfuse = []
         tentativiParola = 0
         feedback = .nessuno
     }
@@ -167,7 +170,12 @@ final class LivelloViewModel: ObservableObject {
     }
 
     private func fallito(confusione: Bool) {
-        if confusione { confusioniConGemella += 1 } else { altriErrori += 1 }
+        if confusione {
+            confusioniConGemella += 1
+            paroleConfuse.append(parola.testo)
+        } else {
+            altriErrori += 1
+        }
         tentativiParola += 1
         // dopo 3 tentativi si passa oltre, senza frustrare il bambino
         if tentativiParola >= 3 {
