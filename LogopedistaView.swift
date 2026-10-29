@@ -3,6 +3,7 @@ import SwiftUI
 /// Area riservata al logopedista: riepilogo dei progressi del bambino
 struct LogopedistaView: View {
     @EnvironmentObject private var progresso: Progresso
+    @ObservedObject private var gestore = GestoreParole.shared
     var cambiaUtente: () -> Void = {}
     @State private var confermaAzzera = false
 
@@ -33,6 +34,14 @@ struct LogopedistaView: View {
 
                 ForEach(Percorso.tutti) { percorso in
                     Section {
+                        NavigationLink {
+                            GestioneParoleView(percorso: percorso)
+                        } label: {
+                            Label("Gestisci parole (\(gestore.paroleAttive(percorso).count) attive)",
+                                  systemImage: "text.badge.plus")
+                                .foregroundStyle(percorso.colore)
+                        }
+
                         ForEach(Sfida.allCases) { sfida in
                             SfidaRiepilogoRow(percorso: percorso, sfida: sfida)
                         }
@@ -44,7 +53,7 @@ struct LogopedistaView: View {
                                     .font(.subheadline.weight(.semibold))
                                 ForEach(confuse.prefix(5), id: \.parola) { voce in
                                     HStack {
-                                        Text("\(voce.parola) → \(percorso.gemella(di: voce.parola))")
+                                        Text("\(voce.parola) → \(gestore.gemella(di: voce.parola, in: percorso))")
                                         Spacer()
                                         Text("×\(voce.volte)")
                                             .foregroundStyle(.secondary)
@@ -171,13 +180,6 @@ struct StoricoSessioniView: View {
         }
         .navigationTitle("Storico")
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-extension Percorso {
-    /// La parola gemella di una parola del percorso
-    func gemella(di testo: String) -> String {
-        parole.first { $0.testo == testo }?.gemella ?? "?"
     }
 }
 

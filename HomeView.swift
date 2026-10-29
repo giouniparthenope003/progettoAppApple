@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var progresso: Progresso
+    @ObservedObject private var gestore = GestoreParole.shared
     var cambiaUtente: () -> Void = {}
 
     var body: some View {
@@ -32,7 +33,7 @@ struct HomeView: View {
 
                     ForEach(Percorso.tutti) { percorso in
                         NavigationLink {
-                            PercorsoView(percorso: percorso)
+                            PercorsoView(percorso: gestore.perIlGioco(percorso))
                         } label: {
                             PercorsoCard(
                                 percorso: percorso,
