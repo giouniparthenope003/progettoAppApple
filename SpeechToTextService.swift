@@ -8,6 +8,7 @@ enum RecognizerError: Error, LocalizedError {
     case recognizerUnavailable
     case notAuthorizedToRecognize
     case notPermittedToRecord
+    case microphoneUnavailable
 
     var errorDescription: String? {
         switch self {
@@ -17,6 +18,8 @@ enum RecognizerError: Error, LocalizedError {
             "Serve il permesso per il riconoscimento vocale (Impostazioni > Privacy)."
         case .notPermittedToRecord:
             "Serve il permesso per usare il microfono (Impostazioni > Privacy)."
+        case .microphoneUnavailable:
+            "Non trovo nessun microfono. Sul simulatore controlla il menu I/O > Audio Input."
         }
     }
 }
@@ -118,11 +121,16 @@ nonisolated final class SpeechToTextService: SpeechToTextServiceProtocol {
         request.shouldReportPartialResults = true
 
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .duckOthers])
+        try session.setCategory(.playAndRecord, mode: .default,
+                                options: [.defaultToSpeaker, .duckOthers, .allowBluetoothA2DP])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
+        // Senza microfono il formato è vuoto e installTap farebbe chiudere l'app
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            throw RecognizerError.microphoneUnavailable
+        }
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { @Sendable buffer, _ in
             request.append(buffer)
         }
