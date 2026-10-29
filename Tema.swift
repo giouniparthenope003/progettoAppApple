@@ -14,6 +14,20 @@ enum Tema {
     }
 }
 
+/// Pippo, il pappagallo dell'app (immagine "Pippo" negli Assets)
+struct PippoView: View {
+    var altezza: CGFloat
+
+    var body: some View {
+        Image("Pippo")
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .frame(height: altezza)
+            .accessibilityLabel("Pippo il pappagallo")
+    }
+}
+
 /// Pulsante grande e rotondo
 struct PillolaStile: ButtonStyle {
     let colore: Color
@@ -123,8 +137,7 @@ struct PippoTrack: View {
                     .font(.system(size: 40))
                     .position(x: margine + larghezza, y: y)
 
-                Text("🦜")
-                    .font(.system(size: 48))
+                PippoView(altezza: 54)
                     .position(x: margine + CGFloat(corrente) * passo, y: y - 6)
             }
             .animation(.spring(response: 0.6, dampingFraction: 0.6), value: corrente)

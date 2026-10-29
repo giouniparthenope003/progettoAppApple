@@ -24,7 +24,7 @@ struct HomeView: View {
                     }
 
                     HStack(spacing: 12) {
-                        Text("🦜").font(.system(size: 90))
+                        PippoView(altezza: 110)
                         Text("Ciao! Sono Pippo.\nAiutami a tornare a casa!")
                             .font(Tema.titolo(28))
                             .minimumScaleFactor(0.7)

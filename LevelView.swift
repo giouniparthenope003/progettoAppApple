@@ -128,7 +128,7 @@ struct LevelView: View {
 
     private var bolla: some View {
         HStack(spacing: 12) {
-            Text("🦜").font(.system(size: 44))
+            PippoView(altezza: 52)
             Text(livello.messaggio)
                 .font(Tema.titolo(26, .bold))
                 .minimumScaleFactor(0.7)
@@ -180,7 +180,7 @@ struct CompletatoView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 22) {
-                Text("🦜").font(.system(size: 130))
+                PippoView(altezza: 160)
                 Text("Evviva!").font(Tema.titolo(56))
                 Text("Pippo è più vicino a casa!")
                     .font(Tema.titolo(26, .bold))
