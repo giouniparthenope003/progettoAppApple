@@ -78,7 +78,7 @@ struct BottoneGenitore: View {
         Button(action: azione) {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("👨‍👩‍👧  GENITORE")
+                    Label("GENITORE", systemImage: "figure.and.child.holdinghands")
                         .font(Tema.titolo(15, .heavy))
                         .tracking(1)
                         .foregroundStyle(.white.opacity(0.9))
