@@ -1,11 +1,36 @@
 import SwiftUI
 
-/// Area riservata al logopedista: riepilogo dei progressi del bambino
+/// Ingresso all'area logopedista: prima chiede il codice, poi mostra il pannello
 struct LogopedistaView: View {
+    var cambiaUtente: () -> Void = {}
+    @State private var sbloccato = false
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        Group {
+            if sbloccato {
+                PannelloLogopedistaView(cambiaUtente: cambiaUtente)
+            } else {
+                CodiceView(annulla: cambiaUtente) {
+                    withAnimation { sbloccato = true }
+                }
+            }
+        }
+        // Se l'app va in background, l'area si richiude
+        .onChange(of: scenePhase) { _, fase in
+            if fase == .background { sbloccato = false }
+        }
+    }
+}
+
+/// Area riservata al logopedista: riepilogo dei progressi del bambino
+struct PannelloLogopedistaView: View {
     @EnvironmentObject private var progresso: Progresso
     @ObservedObject private var gestore = GestoreParole.shared
     var cambiaUtente: () -> Void = {}
     @State private var confermaAzzera = false
+    @State private var cambiaCodice = false
+    @State private var codiceAggiornato = false
 
     var body: some View {
         NavigationStack {
@@ -83,6 +108,9 @@ struct LogopedistaView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
+                        Button("Cambia codice", systemImage: "lock.rotation") {
+                            cambiaCodice = true
+                        }
                         Button("Azzera progressi", systemImage: "trash", role: .destructive) {
                             confermaAzzera = true
                         }
@@ -97,6 +125,17 @@ struct LogopedistaView: View {
                 Button("Azzera", role: .destructive) { progresso.azzera() }
             } message: {
                 Text("Stelle e storico delle sessioni verranno cancellati definitivamente.")
+            }
+            .fullScreenCover(isPresented: $cambiaCodice) {
+                CodiceView(cambio: true, annulla: { cambiaCodice = false }) {
+                    cambiaCodice = false
+                    codiceAggiornato = true
+                }
+            }
+            .alert("Codice aggiornato", isPresented: $codiceAggiornato) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Da ora in poi usa il nuovo codice per entrare nell'area logopedista.")
             }
         }
     }
@@ -184,6 +223,6 @@ struct StoricoSessioniView: View {
 }
 
 #Preview {
-    LogopedistaView()
+    PannelloLogopedistaView()
         .environmentObject(Progresso())
 }
