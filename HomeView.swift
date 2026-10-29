@@ -2,11 +2,27 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject private var progresso: Progresso
+    @ObservedObject private var gestore = GestoreParole.shared
+    var cambiaUtente: () -> Void = {}
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 22) {
+                    // Torna alla scelta tra genitore e logopedista
+                    HStack {
+                        Button(action: cambiaUtente) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .background(.white.opacity(0.8), in: Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                        }
+                        .accessibilityLabel("Indietro")
+                        Spacer()
+                    }
+
                     HStack(spacing: 12) {
                         Text("🦜").font(.system(size: 90))
                         Text("Ciao! Sono Pippo.\nAiutami a tornare a casa!")
@@ -17,7 +33,7 @@ struct HomeView: View {
 
                     ForEach(Percorso.tutti) { percorso in
                         NavigationLink {
-                            PercorsoView(percorso: percorso)
+                            PercorsoView(percorso: gestore.perIlGioco(percorso))
                         } label: {
                             PercorsoCard(
                                 percorso: percorso,
