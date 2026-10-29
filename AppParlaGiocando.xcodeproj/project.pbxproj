@@ -245,7 +245,6 @@
 				DEVELOPMENT_TEAM = LZ73DQ32D3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Pippo usa Face ID per proteggere l'area riservata al logopedista.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pippo usa il microfono per ascoltare il bambino mentre pronuncia le parole";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Pippo usa il riconoscimento vocale per capire se il bambino ha detto la parola giusta";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -282,7 +281,6 @@
 				DEVELOPMENT_TEAM = LZ73DQ32D3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Pippo usa Face ID per proteggere l'area riservata al logopedista.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Pippo usa il microfono per ascoltare il bambino mentre pronuncia le parole";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Pippo usa il riconoscimento vocale per capire se il bambino ha detto la parola giusta";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
