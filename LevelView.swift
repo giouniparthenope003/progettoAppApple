@@ -217,3 +217,4 @@ struct CompletatoView: View {
         .onAppear { apparso = true }
     }
 }
+

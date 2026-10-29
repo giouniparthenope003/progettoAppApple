@@ -83,3 +83,4 @@ struct PercorsoCard: View {
         .shadow(color: percorso.colore.opacity(0.35), radius: 10, y: 6)
     }
 }
+

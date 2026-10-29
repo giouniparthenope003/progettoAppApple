@@ -140,3 +140,4 @@ nonisolated final class SpeechToTextService: SpeechToTextServiceProtocol {
         return (audioEngine, request)
     }
 }
+

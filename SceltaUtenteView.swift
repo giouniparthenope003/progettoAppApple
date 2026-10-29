@@ -1,3 +1,4 @@
+
 import SwiftUI
 
 /// Chi sta usando l'app in questo momento
@@ -22,7 +23,7 @@ struct SceltaUtenteView: View {
             SfondoIsola()
 
             VStack(spacing: 0) {
-                Spacer(minLength: 8)
+                Spacer(minLength:8)
 
                 // Pippo sulla sua isoletta, con il fumetto
                 ZStack(alignment: .bottom) {
@@ -78,7 +79,7 @@ struct BottoneGenitore: View {
         Button(action: azione) {
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label("GENITORE", systemImage: "figure.and.child.holdinghands")
+                    Text("👨‍👩‍👧  GENITORE")
                         .font(Tema.titolo(15, .heavy))
                         .tracking(1)
                         .foregroundStyle(.white.opacity(0.9))
@@ -98,7 +99,8 @@ struct BottoneGenitore: View {
 
                 Spacer(minLength: 0)
 
-                ZStack {
+
+ZStack {
                     Circle()
                         .fill(.white.opacity(0.35))
                         .frame(width: 96, height: 96)
@@ -188,6 +190,7 @@ struct StilePremuto: ButtonStyle {
 }
 
 // MARK: - Fumetto
+
 
 struct FumettoPippo: View {
     var body: some View {
@@ -288,7 +291,8 @@ struct Onda: Shape {
         set { fase = newValue }
     }
 
-    func path(in r: CGRect) -> Path {
+
+func path(in r: CGRect) -> Path {
         Path { p in
             let ampiezza: CGFloat = 9
             let lunghezza = r.width / 1.3
@@ -307,3 +311,4 @@ struct Onda: Shape {
 #Preview {
     SceltaUtenteView { _ in }
 }
+
