@@ -31,6 +31,7 @@ struct PannelloLogopedistaView: View {
     @State private var confermaAzzera = false
     @State private var cambiaCodice = false
     @State private var codiceAggiornato = false
+    @AppStorage(Biometria.chiave) private var biometria = false
 
     var body: some View {
         NavigationStack {
@@ -108,6 +109,9 @@ struct PannelloLogopedistaView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
+                        if Biometria.disponibile {
+                            Toggle("Accedi con \(Biometria.nome)", systemImage: Biometria.icona, isOn: $biometria)
+                        }
                         Button("Cambia codice", systemImage: "lock.rotation") {
                             cambiaCodice = true
                         }
@@ -125,6 +129,13 @@ struct PannelloLogopedistaView: View {
                 Button("Azzera", role: .destructive) { progresso.azzera() }
             } message: {
                 Text("Stelle e storico delle sessioni verranno cancellati definitivamente.")
+            }
+            // Prima di attivare Face ID, verifica che riconosca chi lo sta attivando
+            .onChange(of: biometria) { _, attiva in
+                guard attiva else { return }
+                Task {
+                    if !(await Biometria.autentica()) { biometria = false }
+                }
             }
             .fullScreenCover(isPresented: $cambiaCodice) {
                 CodiceView(cambio: true, annulla: { cambiaCodice = false }) {

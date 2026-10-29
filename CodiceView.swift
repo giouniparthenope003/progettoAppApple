@@ -1,5 +1,6 @@
 import SwiftUI
 import CryptoKit
+import LocalAuthentication
 
 /// Il codice di 4 cifre che protegge l'area logopedista.
 /// Viene salvato solo come impronta (hash), mai in chiaro.
@@ -30,6 +31,57 @@ enum CodiceLogopedista {
     }
 }
 
+/// Face ID / Touch ID per entrare nell'area logopedista senza digitare il codice
+enum Biometria {
+    static let chiave = "logopedista.biometria"
+
+    /// Attivata dal logopedista nel menu dell'area riservata
+    static var abilitata: Bool {
+        UserDefaults.standard.bool(forKey: chiave)
+    }
+
+    /// Il dispositivo ha Face ID / Touch ID configurato
+    static var disponibile: Bool {
+        LAContext().canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+    }
+
+    private static var tipo: LABiometryType {
+        let contesto = LAContext()
+        _ = contesto.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return contesto.biometryType
+    }
+
+    static var nome: String {
+        switch tipo {
+        case .touchID:  "Touch ID"
+        case .opticID:  "Optic ID"
+        default:        "Face ID"
+        }
+    }
+
+    static var icona: String {
+        switch tipo {
+        case .touchID:  "touchid"
+        case .opticID:  "opticid"
+        default:        "faceid"
+        }
+    }
+
+    /// Mostra la richiesta di Face ID. Restituisce true se riconosciuto.
+    static func autentica() async -> Bool {
+        let contesto = LAContext()
+        contesto.localizedFallbackTitle = "Usa il codice"
+        do {
+            return try await contesto.evaluatePolicy(
+                .deviceOwnerAuthenticationWithBiometrics,
+                localizedReason: "Accedi all'area riservata al logopedista"
+            )
+        } catch {
+            return false
+        }
+    }
+}
+
 /// Tastierino per inserire, creare o cambiare il codice
 struct CodiceView: View {
     private enum Fase: Equatable {
@@ -56,6 +108,11 @@ struct CodiceView: View {
         self.sblocca = sblocca
         let iniziale: Fase = (cambio || !CodiceLogopedista.impostato) ? .nuovo : .inserisci
         _fase = State(initialValue: iniziale)
+    }
+
+    /// Face ID si propone solo per entrare, non quando si crea o cambia il codice
+    private var usaBiometria: Bool {
+        fase == .inserisci && Biometria.abilitata && Biometria.disponibile
     }
 
     private var titolo: String {
@@ -139,6 +196,10 @@ struct CodiceView: View {
         }
         .background(Color(.systemBackground).ignoresSafeArea())
         .sensoryFeedback(.error, trigger: scosse)
+        // Appena si apre la schermata, propone subito Face ID
+        .task {
+            if usaBiometria { await provaBiometria() }
+        }
         .alert("Domanda per adulti", isPresented: $mostraRecupero) {
             TextField("Risposta", text: $rispostaRecupero)
                 .keyboardType(.numberPad)
@@ -152,7 +213,8 @@ struct CodiceView: View {
     // MARK: Tastierino
 
     private var tastierino: some View {
-        let righe = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"], ["", "0", "⌫"]]
+        let righe = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"],
+                     [usaBiometria ? "bio" : "", "0", "⌫"]]
         return VStack(spacing: 16) {
             ForEach(righe, id: \.self) { riga in
                 HStack(spacing: 24) {
@@ -170,6 +232,8 @@ struct CodiceView: View {
             return
         case "⌫":
             if !cifre.isEmpty { cifre.removeLast() }
+        case "bio":
+            Task { await provaBiometria() }
         default:
             guard cifre.count < CodiceLogopedista.lunghezza else { return }
             errore = nil
@@ -199,6 +263,12 @@ struct CodiceView: View {
                 fase = .nuovo
                 sbagliato("I codici non coincidono, ricomincia")
             }
+        }
+    }
+
+    private func provaBiometria() async {
+        if await Biometria.autentica() {
+            sblocca()
         }
     }
 
@@ -234,6 +304,10 @@ private struct TastoCodice: View {
                 if tasto == "⌫" {
                     Image(systemName: "delete.left")
                         .font(.system(size: 24))
+                } else if tasto == "bio" {
+                    Image(systemName: Biometria.icona)
+                        .font(.system(size: 30))
+                        .foregroundStyle(.purple)
                 } else {
                     Text(tasto)
                         .font(.system(size: 32, weight: .medium, design: .rounded))
@@ -242,12 +316,12 @@ private struct TastoCodice: View {
             .foregroundStyle(.primary)
             .frame(width: 78, height: 78)
             .background(
-                Circle().fill(tasto.isEmpty || tasto == "⌫" ? Color.clear : Color(.secondarySystemBackground))
+                Circle().fill(tasto.isEmpty || tasto == "⌫" || tasto == "bio" ? Color.clear : Color(.secondarySystemBackground))
             )
         }
         .buttonStyle(.plain)
         .disabled(tasto.isEmpty)
-        .accessibilityLabel(tasto == "⌫" ? "Cancella" : tasto)
+        .accessibilityLabel(tasto == "⌫" ? "Cancella" : tasto == "bio" ? Biometria.nome : tasto)
     }
 }
 
