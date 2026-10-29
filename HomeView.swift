@@ -10,12 +10,16 @@ struct HomeView: View {
                 VStack(spacing: 22) {
                     // Torna alla scelta tra genitore e logopedista
                     HStack {
-                        Spacer()
                         Button(action: cambiaUtente) {
-                            Label("Cambia utente", systemImage: "person.2.circle.fill")
-                                .font(Tema.titolo(16, .semibold))
-                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .background(.white.opacity(0.8), in: Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
                         }
+                        .accessibilityLabel("Indietro")
+                        Spacer()
                     }
 
                     HStack(spacing: 12) {

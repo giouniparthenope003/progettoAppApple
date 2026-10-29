@@ -70,7 +70,7 @@ struct LogopedistaView: View {
             .navigationTitle("Area logopedista")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cambia utente", systemImage: "person.2", action: cambiaUtente)
+                    Button("Indietro", systemImage: "chevron.left", action: cambiaUtente)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
