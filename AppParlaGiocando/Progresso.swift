@@ -22,6 +22,7 @@ final class Progresso: ObservableObject {
 
     private let chiaveDefaults = "progresso.stelle"
     private let chiaveSessioni = "progresso.sessioni"
+    private static let maxSessioni = 1000
 
     init() {
         if let data = UserDefaults.standard.data(forKey: chiaveDefaults),
@@ -73,6 +74,9 @@ final class Progresso: ObservableObject {
             altriErrori: livello.altriErrori,
             paroleConfuse: livello.paroleConfuse
         ))
+        if sessioni.count > Self.maxSessioni {
+            sessioni.removeFirst(sessioni.count - Self.maxSessioni)
+        }
         salvaSessioni()
     }
 

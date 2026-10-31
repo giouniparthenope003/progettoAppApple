@@ -21,6 +21,7 @@ final class LivelloViewModel: ObservableObject {
     @Published private(set) var paroleConfuse: [String] = []
 
     private var tentativiParola = 0
+    private var pausa: Task<Void, Never>?
     private let paroleAPartita = 6
 
     init(percorso: Percorso, sfida: Sfida) {
@@ -153,6 +154,7 @@ final class LivelloViewModel: ObservableObject {
     }
 
     func ricomincia() {
+        pausa?.cancel()
         parole = Array(percorso.parole.shuffled().prefix(paroleAPartita))
         indice = 0
         confusioniConGemella = 0
@@ -185,8 +187,10 @@ final class LivelloViewModel: ObservableObject {
     }
 
     private func avanzaDopoPausa() {
-        Task {
+        pausa?.cancel()
+        pausa = Task {
             try? await Task.sleep(for: .seconds(1.8))
+            guard !Task.isCancelled else { return }
             tentativiParola = 0
             indice += 1
             feedback = .nessuno
