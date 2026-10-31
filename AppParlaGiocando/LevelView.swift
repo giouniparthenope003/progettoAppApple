@@ -40,7 +40,12 @@ struct LevelView: View {
         }
         // Se sbaglia, Pippo ripete la parola giusta
         .onChange(of: livello.feedback) { _, nuovo in
-            if nuovo == .quasi || nuovo == .riprova { speaker.di(livello.daAscoltare) }
+            guard nuovo == .quasi || nuovo == .riprova else { return }
+            // Aspettiamo che il microfono si sia spento del tutto, altrimenti l'audio si taglia
+            Task {
+                try? await Task.sleep(for: .seconds(0.4))
+                if !speech.isRecording { speaker.di(livello.daAscoltare) }
+            }
         }
         // Salviamo le stelle a fine sfida
         .onChange(of: livello.completato) { _, finito in

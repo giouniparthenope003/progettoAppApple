@@ -202,13 +202,25 @@ final class LivelloViewModel: ObservableObject {
 final class Speaker: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
 
+    /// La migliore voce italiana installata sull'iPhone (premium > migliorata > base)
+    private static let voce: AVSpeechSynthesisVoice? = {
+        let italiane = AVSpeechSynthesisVoice.speechVoices().filter { $0.language == "it-IT" }
+        return italiane.max { $0.quality.rawValue < $1.quality.rawValue }
+            ?? AVSpeechSynthesisVoice(language: "it-IT")
+    }()
+
     func di(_ testo: String) {
         synthesizer.stopSpeaking(at: .immediate)
         Self.preparaAudio()
-        let utterance = AVSpeechUtterance(string: testo)
-        utterance.voice = AVSpeechSynthesisVoice(language: "it-IT")
-        utterance.rate = 0.4
+
+        let utterance = AVSpeechUtterance(string: Self.conPunto(testo))
+        utterance.voice = Self.voce
+        utterance.rate = 0.42
         utterance.pitchMultiplier = 1.15
+        // Un attimo di respiro prima e dopo: l'altoparlante fa in tempo ad accendersi
+        // e l'ultima vocale non viene tagliata
+        utterance.preUtteranceDelay = 0.15
+        utterance.postUtteranceDelay = 0.3
         synthesizer.speak(utterance)
     }
 
@@ -216,13 +228,26 @@ final class Speaker: ObservableObject {
         synthesizer.stopSpeaking(at: .immediate)
     }
 
+    /// Una parola senza punteggiatura viene chiusa di colpo dalla sintesi vocale:
+    /// con il punto finale l'ultima vocale viene pronunciata per intero ("palla." invece di "pall")
+    private static func conPunto(_ testo: String) -> String {
+        let pulito = testo.trimmingCharacters(in: .whitespaces)
+        guard let ultimo = pulito.last, !".!?".contains(ultimo) else { return pulito }
+        return pulito + "."
+    }
+
     /// Senza questa impostazione la voce non si sente con l'iPhone in modalità silenziosa.
     /// Usa la stessa configurazione del microfono, così l'audio non cambia tra ascolto e parlato.
+    /// La sessione si configura una sola volta: riattivarla a ogni parola taglia l'audio.
+    private static var audioPronto = false
+
     private static func preparaAudio() {
         let sessione = AVAudioSession.sharedInstance()
-        try? sessione.setCategory(.playAndRecord, mode: .default,
-                                  options: [.defaultToSpeaker, .duckOthers, .allowBluetoothA2DP])
+        if !audioPronto || sessione.category != .playAndRecord {
+            try? sessione.setCategory(.playAndRecord, mode: .default,
+                                      options: [.defaultToSpeaker, .duckOthers, .allowBluetoothA2DP])
+            audioPronto = true
+        }
         try? sessione.setActive(true)
     }
 }
-
