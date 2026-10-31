@@ -5,6 +5,7 @@ struct LevelView: View {
     @StateObject private var livello: LivelloViewModel
     @StateObject private var speech = SpeechToTextViewModel()
     @StateObject private var speaker = Speaker()
+    @State private var uscito = false
 
     init(percorso: Percorso, sfida: Sfida) {
         _livello = StateObject(wrappedValue: LivelloViewModel(percorso: percorso, sfida: sfida))
@@ -35,7 +36,7 @@ struct LevelView: View {
         }
         // Quando l'ascolto finisce, valutiamo
         .onChange(of: speech.isRecording) { _, inRegistrazione in
-            if !inRegistrazione { livello.valuta(speech.transcript) }
+            if !inRegistrazione, !uscito { livello.valuta(speech.transcript) }
         }
         // Se sbaglia, Pippo ripete la parola giusta
         .onChange(of: livello.feedback) { _, nuovo in
@@ -49,7 +50,9 @@ struct LevelView: View {
         .task(id: livello.indice) {
             guard livello.sfida != .indovina, !livello.completato else { return }
             try? await Task.sleep(for: .seconds(0.6))
-            if !Task.isCancelled { speaker.di(livello.daAscoltare) }
+            // Se il bambino ha già acceso il microfono, Pippo non parla:
+            // altrimenti la sua voce verrebbe scambiata per la risposta del bambino
+            if !Task.isCancelled, !speech.isRecording { speaker.di(livello.daAscoltare) }
         }
         // Stop automatico se il bambino resta in silenzio
         .task(id: speech.isRecording) {
@@ -57,7 +60,9 @@ struct LevelView: View {
             try? await Task.sleep(for: .seconds(livello.secondiMax))
             if !Task.isCancelled { speech.stopRecording() }
         }
+        .onAppear { uscito = false }
         .onDisappear {
+            uscito = true
             speaker.ferma()
             speech.stopRecording()
         }
