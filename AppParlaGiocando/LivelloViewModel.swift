@@ -19,6 +19,14 @@ final class LivelloViewModel: ObservableObject {
     @Published private(set) var altriErrori = 0
     /// Parole su cui il bambino ha detto la gemella (per il logopedista)
     @Published private(set) var paroleConfuse: [String] = []
+    /// Il complimento che Pippo dice quando il bambino indovina
+    @Published private(set) var complimento = "Bravissimo!"
+
+    /// Complimenti adatti sia ai bambini che alle bambine
+    static let complimenti = [
+        "Grande!", "Evviva!", "Fantastico!", "Perfetto!", "Esatto!",
+        "Super!", "Che bello!", "Ce l'hai fatta!", "Ottimo lavoro!", "Wow, giusto!"
+    ]
 
     private var tentativiParola = 0
     private var pausa: Task<Void, Never>?
@@ -80,7 +88,7 @@ final class LivelloViewModel: ObservableObject {
             default:        "Premi il microfono e parla!"
             }
         case .ascolto:    "Ti ascolto… 👂"
-        case .bravo:      "Bravissimo! 🎉"
+        case .bravo:      "\(complimento) 🎉"
         case .quasi:
             sfida == .coppia ? "Quasi! Dimmi tutte e due!" : "Quasi! Ascolta bene: \(parola.testo)"
         case .riprova:    "Riproviamo! Ascolta bene 👂"
@@ -167,8 +175,10 @@ final class LivelloViewModel: ObservableObject {
     // MARK: Interni
 
     private func successo() {
+        // Mai lo stesso complimento due volte di fila
+        complimento = Self.complimenti.filter { $0 != complimento }.randomElement() ?? "Bravissimo!"
         feedback = .bravo
-        avanzaDopoPausa()
+        avanzaDopoPausa(secondi: 2.3)   // il tempo di godersi il complimento
     }
 
     private func fallito(confusione: Bool) {
@@ -186,10 +196,10 @@ final class LivelloViewModel: ObservableObject {
         }
     }
 
-    private func avanzaDopoPausa() {
+    private func avanzaDopoPausa(secondi: Double = 1.8) {
         pausa?.cancel()
         pausa = Task {
-            try? await Task.sleep(for: .seconds(1.8))
+            try? await Task.sleep(for: .seconds(secondi))
             guard !Task.isCancelled else { return }
             tentativiParola = 0
             indice += 1
@@ -209,14 +219,15 @@ final class Speaker: ObservableObject {
             ?? AVSpeechSynthesisVoice(language: "it-IT")
     }()
 
-    func di(_ testo: String) {
+    /// - Parameter allegro: voce un po' più acuta e vivace, per i complimenti
+    func di(_ testo: String, allegro: Bool = false) {
         synthesizer.stopSpeaking(at: .immediate)
         Self.preparaAudio()
 
         let utterance = AVSpeechUtterance(string: Self.conPunto(testo))
         utterance.voice = Self.voce
-        utterance.rate = 0.42
-        utterance.pitchMultiplier = 1.15
+        utterance.rate = allegro ? 0.48 : 0.42
+        utterance.pitchMultiplier = allegro ? 1.3 : 1.15
         // Un attimo di respiro prima e dopo: l'altoparlante fa in tempo ad accendersi
         // e l'ultima vocale non viene tagliata
         utterance.preUtteranceDelay = 0.15
