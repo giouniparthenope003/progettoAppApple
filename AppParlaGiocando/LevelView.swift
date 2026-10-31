@@ -38,13 +38,18 @@ struct LevelView: View {
         .onChange(of: speech.isRecording) { _, inRegistrazione in
             if !inRegistrazione, !uscito { livello.valuta(speech.transcript) }
         }
-        // Se sbaglia, Pippo ripete la parola giusta
+        // Se indovina, Pippo fa un complimento; se sbaglia, ripete la parola giusta
         .onChange(of: livello.feedback) { _, nuovo in
-            guard nuovo == .quasi || nuovo == .riprova else { return }
+            guard nuovo == .bravo || nuovo == .quasi || nuovo == .riprova else { return }
             // Aspettiamo che il microfono si sia spento del tutto, altrimenti l'audio si taglia
             Task {
                 try? await Task.sleep(for: .seconds(0.4))
-                if !speech.isRecording { speaker.di(livello.daAscoltare) }
+                guard !speech.isRecording else { return }
+                if nuovo == .bravo {
+                    speaker.di(livello.complimento, allegro: true)   // complimento!
+                } else {
+                    speaker.di(livello.daAscoltare)                  // ripete la parola giusta
+                }
             }
         }
         // Salviamo le stelle a fine sfida
