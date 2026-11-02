@@ -4,6 +4,10 @@ App iOS (SwiftUI) per aiutare i bambini con **disturbo fonologico** ad allenarsi
 
 Il bambino aiuta il pappagallo **Pippo** a tornare a casa pronunciando le parole. L'app ascolta con il riconoscimento vocale e capisce se ha detto la parola giusta o la sua "gemella".
 
+## Presentazione
+
+La presentazione del progetto (in inglese) è su Canva: [ParlaGiocando – Presentazione](https://www.canva.com/design/DAHZaExidsE/view)
+
 ## Chi la usa
 
 - **Genitore**: gioca insieme al bambino. Tre percorsi (B/P, T/D, S/Z), ognuno con quattro sfide di difficoltà crescente:
