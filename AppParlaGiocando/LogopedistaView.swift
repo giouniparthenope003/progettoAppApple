@@ -6,6 +6,7 @@ struct LogopedistaView: View {
     @ObservedObject private var gestore = GestoreParole.shared
     var cambiaUtente: () -> Void = {}
     @State private var confermaAzzera = false
+    @AppStorage(Suoni.chiaveAttivi) private var suoniAttivi = true
 
     var body: some View {
         NavigationStack {
@@ -75,6 +76,14 @@ if !progresso.sessioni.isEmpty {
                             StoricoSessioniView()
                         }
                     }
+                }
+
+                Section {
+                    Toggle("Suoni e vibrazioni", systemImage: "speaker.wave.2.fill", isOn: $suoniAttivi)
+                } header: {
+                    Text("Impostazioni")
+                } footer: {
+                    Text("Un piccolo suono quando il bambino tocca i pulsanti e una melodia a fine sfida. Spegnili se il bambino è sensibile agli stimoli sonori: la voce di Pippo resta attiva.")
                 }
             }
             .navigationTitle("Area logopedista")

@@ -180,12 +180,15 @@ struct BottoneLogopedista: View {
     }
 }
 
-/// Il pulsante si rimpicciolisce un po' quando lo si tocca
+/// Il pulsante si rimpicciolisce un po' quando lo si tocca, con un piccolo "pop"
 struct StilePremuto: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.95 : 1)
             .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+            .onChange(of: configuration.isPressed) { _, premuto in
+                if premuto { Suoni.shared.suona(.tocco) }
+            }
     }
 }
 

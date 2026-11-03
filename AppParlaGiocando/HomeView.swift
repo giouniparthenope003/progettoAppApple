@@ -40,7 +40,7 @@ struct HomeView: View {
                                 stelle: progresso.totaleStelle(percorso)
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(StilePremuto())
                     }
                 }
                 .padding()
