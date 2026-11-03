@@ -13,6 +13,10 @@ final class LivelloViewModel: ObservableObject {
     let sfida: Sfida
 
     @Published private(set) var parole: [Parola]
+    /// Sfida "Quale hai sentito?": per ogni turno, se Pippo dice la gemella invece della parola
+    @Published private(set) var diceGemella: [Bool] = []
+    /// Sfida "Quale hai sentito?": per ogni turno, se il disegno della gemella sta a sinistra
+    @Published private(set) var gemellaASinistra: [Bool] = []
     @Published private(set) var indice = 0
     @Published var feedback: Feedback = .nessuno
     @Published private(set) var confusioniConGemella = 0
@@ -37,7 +41,28 @@ final class LivelloViewModel: ObservableObject {
     init(percorso: Percorso, sfida: Sfida) {
         self.percorso = percorso
         self.sfida = sfida
-        self.parole = Self.scegliParole(percorso)
+        self.parole = []
+        prepara()
+    }
+
+    /// Sceglie le parole (e, per "Quale hai sentito?", cosa dice Pippo e dove stanno i disegni)
+    private func prepara() {
+        guard sfida == .coppia else {
+            parole = Self.scegliParole(percorso)
+            diceGemella = Array(repeating: false, count: parole.count)
+            gemellaASinistra = diceGemella
+            return
+        }
+        // Solo le coppie con due disegni; se sono poche si ripetono fino a 6 turni
+        let coppie = percorso.coppieIllustrate
+        var scelte: [Parola] = []
+        while !coppie.isEmpty && scelte.count < Self.paroleAPartita {
+            scelte += coppie.shuffled()
+        }
+        parole = Array(scelte.prefix(Self.paroleAPartita))
+        // Metà delle volte Pippo dice la parola, metà la gemella, in ordine casuale
+        diceGemella = parole.indices.map { $0 % 2 == 0 }.shuffled()
+        gemellaASinistra = parole.indices.map { _ in Bool.random() }
     }
 
     /// Le parole della partita: prima alcune delle novità di oggi, poi le altre a caso
@@ -54,6 +79,13 @@ final class LivelloViewModel: ObservableObject {
     var parola: Parola { parole[min(indice, parole.count - 1)] }
     var secondiMax: Double { sfida.secondiMax }
 
+    /// "Quale hai sentito?": Pippo in questo turno dice la gemella?
+    var diceGemellaOra: Bool { diceGemella.indices.contains(indice) ? diceGemella[indice] : false }
+    /// "Quale hai sentito?": il disegno della gemella in questo turno sta a sinistra?
+    var gemellaASinistraOra: Bool { gemellaASinistra.indices.contains(indice) ? gemellaASinistra[indice] : false }
+    /// La parola che Pippo pronuncia in "Quale hai sentito?"
+    var parolaDetta: String { diceGemellaOra ? parola.gemella : parola.testo }
+
     var stelle: Int {
         let errori = confusioniConGemella + altriErrori
         return errori == 0 ? 3 : (errori <= 2 ? 2 : 1)
@@ -65,7 +97,7 @@ final class LivelloViewModel: ObservableObject {
     var daAscoltare: String {
         switch sfida {
         case .ascoltaERipeti, .indovina: parola.testo
-        case .coppia:                    "\(parola.testo)... \(parola.gemella)"
+        case .coppia:                    parolaDetta
         case .frase:                     parola.frase
         }
     }
@@ -75,7 +107,7 @@ final class LivelloViewModel: ObservableObject {
         switch sfida {
         case .ascoltaERipeti: parola.testo.uppercased()
         case .indovina:       "Che cos'è?"
-        case .coppia:         "\(parola.testo.uppercased()) · \(parola.gemella.uppercased())"
+        case .coppia:         "Quale hai sentito?"
         case .frase:          parola.frase
         }
     }
@@ -92,14 +124,14 @@ final class LivelloViewModel: ObservableObject {
         case .nessuno:
             switch sfida {
             case .indovina: "Che cos'è? Dimmelo!"
-            case .coppia:   "Ripeti le due parole!"
+            case .coppia:   "Quale hai sentito? Tocca il disegno!"
             case .frase:    "Ripeti la frase!"
             default:        "Premi il microfono e parla!"
             }
         case .ascolto:    "Ti ascolto… 👂"
         case .bravo:      "\(complimento) 🎉"
         case .quasi:
-            sfida == .coppia ? "Quasi! Dimmi tutte e due!" : "Quasi! Ascolta bene: \(parola.testo)"
+            sfida == .coppia ? "Riascolta bene: \(parolaDetta)" : "Quasi! Ascolta bene: \(parola.testo)"
         case .riprova:    "Riproviamo! Ascolta bene 👂"
         case .nonSentito: "Non ti ho sentito. Riprova! 🎤"
         case .passiamo:   "Non fa niente, andiamo avanti! 💪"
@@ -123,8 +155,6 @@ final class LivelloViewModel: ObservableObject {
         let s = testo.paroleNormalizzate
         let target = parola.testo.normalizzata
         switch sfida {
-        case .coppia:
-            return s.contains(target) && s.contains(parola.gemella.normalizzata)
         case .frase:
             guard let ultima = parola.frase.paroleNormalizzate.last else { return false }
             return s.contains(target) && s.contains(ultima)
@@ -146,33 +176,34 @@ final class LivelloViewModel: ObservableObject {
         let haTarget = s.contains(parola.testo.normalizzata)
         let haGemella = s.contains(parola.gemella.normalizzata)
 
-        switch sfida {
-        case .coppia:
-            if haTarget && haGemella {
-                successo()
-            } else if haTarget || haGemella {
-                feedback = .quasi
-                fallito(confusione: false)
-            } else {
-                feedback = .riprova
-                fallito(confusione: false)
-            }
-        default:
-            if haTarget {
-                successo()
-            } else if haGemella {
-                feedback = .quasi          // ha detto la gemella: è il dato diagnostico!
-                fallito(confusione: true)
-            } else {
-                feedback = .riprova
-                fallito(confusione: false)
-            }
+        if haTarget {
+            successo()
+        } else if haGemella {
+            feedback = .quasi          // ha detto la gemella: è il dato diagnostico!
+            fallito(confusione: true)
+        } else {
+            feedback = .riprova
+            fallito(confusione: false)
+        }
+    }
+
+    /// "Quale hai sentito?": il bambino ha toccato un disegno (la gemella o la parola)
+    func tocca(gemella: Bool) {
+        guard sfida == .coppia, !completato,
+              feedback != .bravo, feedback != .passiamo else { return }
+        if gemella == diceGemellaOra {
+            successo()
+        } else {
+            // Ha scambiato le due parole: è una confusione con la gemella.
+            // Alterniamo quasi/riprova così Pippo ripete la parola a ogni errore.
+            feedback = feedback == .quasi ? .riprova : .quasi
+            fallito(confusione: true)
         }
     }
 
     func ricomincia() {
         pausa?.cancel()
-        parole = Self.scegliParole(percorso)
+        prepara()
         indice = 0
         confusioniConGemella = 0
         altriErrori = 0

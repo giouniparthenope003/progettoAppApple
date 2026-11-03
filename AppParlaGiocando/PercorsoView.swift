@@ -13,7 +13,7 @@ struct PercorsoView: View {
                     .font(Tema.titolo(34))
 
                 ForEach(Sfida.allCases) { sfida in
-                    let sbloccata = progresso.sbloccata(percorso, sfida)
+                    let sbloccata = sfidaSbloccata(sfida)
                     NavigationLink {
                         LevelView(percorso: percorso, sfida: sfida)
                     } label: {
@@ -34,6 +34,21 @@ struct PercorsoView: View {
         .navigationTitle(percorso.titolo)
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    /// "Quale hai sentito?" ha bisogno di almeno una coppia con due disegni
+    private var ascoltoDisponibile: Bool { !percorso.coppieIllustrate.isEmpty }
+
+    private func sfidaSbloccata(_ sfida: Sfida) -> Bool {
+        switch sfida {
+        case .coppia:
+            return ascoltoDisponibile && progresso.sbloccata(percorso, sfida)
+        case .frase where !ascoltoDisponibile:
+            // Senza la sfida 3, la frasetta si sblocca dopo "Indovina e dì"
+            return progresso.sbloccata(percorso, .coppia)
+        default:
+            return progresso.sbloccata(percorso, sfida)
+        }
+    }
 }
 
 struct SfidaCard: View {
@@ -52,26 +67,27 @@ struct SfidaCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(sfida.rawValue + 1). \(sfida.titolo)")
                     .font(Tema.titolo(26))
-                    .minimumScaleFactor(0.7)
+                    .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 Text(sfida.descrizione)
                     .font(Tema.titolo(19, .semibold))
                     .foregroundStyle(.secondary)
                     .minimumScaleFactor(0.7)
                     .lineLimit(2)
-            }
-
-            Spacer(minLength: 4)
-
-            if sbloccata {
-                HStack(spacing: 2) {
-                    ForEach(0..<3) { i in
-                        Image(systemName: i < stelle ? "star.fill" : "star")
-                            .font(.system(size: 20))
-                            .foregroundStyle(.yellow)
+                // Le stelle sotto il testo: così il titolo non viene tagliato
+                if sbloccata {
+                    HStack(spacing: 2) {
+                        ForEach(0..<3) { i in
+                            Image(systemName: i < stelle ? "star.fill" : "star")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.yellow)
+                        }
                     }
+                    .padding(.top, 2)
                 }
             }
+
+            Spacer(minLength: 0)
         }
         .padding(18)
         .background(.white, in: RoundedRectangle(cornerRadius: 30))

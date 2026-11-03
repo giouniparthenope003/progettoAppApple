@@ -9,9 +9,11 @@ struct ParolaPersonalizzata: Codable, Identifiable, Hashable {
     let gemella: String
     let emoji: String
     let frase: String
+    /// Disegno della gemella (facoltativo): serve per "Quale hai sentito?"
+    var emojiGemella: String? = nil
 
     var parola: Parola {
-        Parola(testo: testo, gemella: gemella, emoji: emoji, frase: frase)
+        Parola(testo: testo, gemella: gemella, emoji: emoji, frase: frase, emojiGemella: emojiGemella)
     }
 }
 
@@ -85,8 +87,12 @@ final class GestoreParole: ObservableObject {
     /// Il percorso con le sole parole attive, pronto per il gioco
     func perIlGioco(_ p: Percorso) -> Percorso {
         let novita = Set(nuove(di: p).map(\.testo).filter { attiva(p, $0) })
+        // Per "Quale hai sentito?" servono due disegni: si usano tutte le coppie attive
+        // che li hanno, anche quelle della banca non uscite oggi (sono poche)
+        let illustrate = catalogo(p).filter { $0.emojiGemella != nil && attiva(p, $0.testo) }
         return Percorso(titolo: p.titolo, coppia: p.coppia, emoji: p.emoji,
-                        colore: p.colore, parole: paroleAttive(p), novita: novita)
+                        colore: p.colore, parole: paroleAttive(p), novita: novita,
+                        coppieIllustrate: illustrate)
     }
 
     func gemella(di testo: String, in p: Percorso) -> String {

@@ -13,7 +13,7 @@ La presentazione del progetto (in inglese) è su Canva: [ParlaGiocando – Prese
 - **Genitore**: gioca insieme al bambino. Tre percorsi (B/P, T/D, S/Z), ognuno con quattro sfide di difficoltà crescente:
   1. Ascolta e ripeti
   2. Indovina e dì
-  3. Le due parole
+  3. Quale hai sentito? (Pippo dice una delle due parole, il bambino tocca il disegno giusto)
   4. La frasetta
 - **Logopedista**: controlla i progressi e adatta gli esercizi:
   - stelle, partite ed errori per ogni sfida
