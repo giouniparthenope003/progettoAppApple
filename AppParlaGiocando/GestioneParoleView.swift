@@ -131,6 +131,7 @@ struct NuovaParolaView: View {
     @State private var testo = ""
     @State private var gemella = ""
     @State private var emoji = ""
+    @State private var emojiGemella = ""
     @State private var frase = ""
 
     private var testoPulito: String { testo.trimmingCharacters(in: .whitespaces).lowercased() }
@@ -172,10 +173,11 @@ struct NuovaParolaView: View {
 
                 Section {
                     TextField("Emoji (es. ⚽️)", text: $emoji)
+                    TextField("Emoji della gemella, facoltativa (es. 💃)", text: $emojiGemella)
                 } header: {
-                    Text("Immagine")
+                    Text("Immagini")
                 } footer: {
-                    Text("Il disegno che il bambino vede, soprattutto nella sfida \"Indovina e dì\". Usa la tastiera emoji 🌐.")
+                    Text("Il disegno della parola si vede soprattutto in \"Indovina e dì\". Il disegno della gemella serve per la sfida \"Quale hai sentito?\": mettilo solo se la gemella si può disegnare. Usa la tastiera emoji 🌐.")
                 }
 
                 Section {
@@ -212,12 +214,14 @@ struct NuovaParolaView: View {
 
     private func salva() {
         let simbolo = emoji.trimmingCharacters(in: .whitespaces).first.map(String.init) ?? "⭐️"
+        let simboloGemella = emojiGemella.trimmingCharacters(in: .whitespaces).first.map(String.init)
         gestore.aggiungi(ParolaPersonalizzata(
             percorsoId: percorso.id,
             testo: testoPulito,
             gemella: gemellaPulita,
             emoji: simbolo,
-            frase: frasePulita.isEmpty ? "Guarda, \(testoPulito)!" : frasePulita
+            frase: frasePulita.isEmpty ? "Guarda, \(testoPulito)!" : frasePulita,
+            emojiGemella: simboloGemella
         ))
         dismiss()
     }

@@ -6,6 +6,9 @@ struct LevelView: View {
     @StateObject private var speech = SpeechToTextViewModel()
     @StateObject private var speaker = Speaker()
     @State private var uscito = false
+    /// "Quale hai sentito?": il disegno toccato in questo turno (true = la gemella)
+    @State private var toccata: Bool?
+    @Environment(\.accessibilityReduceMotion) private var riduciMovimento
 
     init(percorso: Percorso, sfida: Sfida) {
         _livello = StateObject(wrappedValue: LivelloViewModel(percorso: percorso, sfida: sfida))
@@ -70,6 +73,8 @@ struct LevelView: View {
             try? await Task.sleep(for: .seconds(livello.secondiMax))
             if !Task.isCancelled { speech.stopRecording() }
         }
+        // Nuovo turno: nessun disegno toccato
+        .onChange(of: livello.indice) { _, _ in toccata = nil }
         .onAppear { uscito = false }
         .onDisappear {
             uscito = true
@@ -90,22 +95,29 @@ struct LevelView: View {
                        colore: livello.percorso.colore)
                 .frame(height: 64)
 
-            carta
-            bolla
+            if livello.sfida == .coppia {
+                // "Quale hai sentito?": si tocca un disegno, il microfono non serve
+                carteAscolto
+                bolla
+                Spacer(minLength: 0)
+            } else {
+                carta
+                bolla
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
-            micButton
+                micButton
 
-            // Utile in fase di prototipo: vedere cosa capisce il riconoscimento vocale
-            Text(speech.transcript.isEmpty ? " " : "Ho sentito: \(speech.transcript)")
-                .font(.system(size: 16, design: .rounded))
-                .foregroundStyle(.secondary)
-
-            if let errore = speech.errorMessage {
-                Text(errore)
+                // Utile in fase di prototipo: vedere cosa capisce il riconoscimento vocale
+                Text(speech.transcript.isEmpty ? " " : "Ho sentito: \(speech.transcript)")
                     .font(.system(size: 16, design: .rounded))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(.secondary)
+
+                if let errore = speech.errorMessage {
+                    Text(errore)
+                        .font(.system(size: 16, design: .rounded))
+                        .foregroundStyle(.red)
+                }
             }
         }
         .padding(.horizontal, 20)
@@ -139,6 +151,63 @@ struct LevelView: View {
         .frame(maxWidth: .infinity)
         .background(.white, in: RoundedRectangle(cornerRadius: 40))
         .shadow(color: livello.percorso.colore.opacity(0.35), radius: 16, y: 8)
+    }
+
+    // MARK: - "Quale hai sentito?"
+
+    /// Due disegni: Pippo dice una delle due parole, il bambino tocca quella giusta
+    private var carteAscolto: some View {
+        let gemellaASinistra = livello.gemellaASinistraOra
+
+        return VStack(spacing: 18) {
+            HStack(spacing: 16) {
+                cartaDisegno(gemella: gemellaASinistra)
+                cartaDisegno(gemella: !gemellaASinistra)
+            }
+
+            Button {
+                speaker.di(livello.daAscoltare)
+            } label: {
+                Label("Ascolta di nuovo", systemImage: "speaker.wave.3.fill")
+            }
+            .buttonStyle(PillolaStile(colore: livello.percorso.colore))
+        }
+        .padding(.vertical, 20)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .background(.white, in: RoundedRectangle(cornerRadius: 40))
+        .shadow(color: livello.percorso.colore.opacity(0.35), radius: 16, y: 8)
+    }
+
+    private func cartaDisegno(gemella: Bool) -> some View {
+        let parola = livello.parola
+        let emoji = gemella ? (parola.emojiGemella ?? "❓") : parola.emoji
+        let giusta = gemella == livello.diceGemellaOra
+        let toccataQui = toccata == gemella
+        // Il disegno giusto si illumina quando il bambino indovina o quando si passa oltre
+        let evidenzia = giusta && (livello.feedback == .bravo || livello.feedback == .passiamo)
+        let scuoti = toccataQui && !giusta && !riduciMovimento
+
+        return Button {
+            toccata = gemella
+            livello.tocca(gemella: gemella)
+        } label: {
+            Text(emoji)
+                .font(.system(size: 96))
+                .frame(maxWidth: .infinity, minHeight: 170)
+                .background(livello.percorso.colore.opacity(0.12), in: RoundedRectangle(cornerRadius: 28))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28)
+                        .stroke(evidenzia ? Color.green : .clear, lineWidth: 6)
+                )
+                .scaleEffect(toccataQui && livello.feedback == .bravo ? 1.08 : 1)
+                .modifier(Scuoti(volte: scuoti ? CGFloat(livello.confusioniConGemella) : 0))
+                .animation(.spring(response: 0.4, dampingFraction: 0.5), value: livello.feedback)
+                .animation(.linear(duration: 0.4), value: livello.confusioniConGemella)
+        }
+        .buttonStyle(StilePremuto())
+        .disabled(livello.feedback == .bravo || livello.feedback == .passiamo)
+        .accessibilityLabel(gemella ? parola.gemella : parola.testo)
     }
 
     private var bolla: some View {
@@ -184,6 +253,19 @@ struct LevelView: View {
             .disabled(livello.feedback == .bravo || livello.feedback == .passiamo)
         }
         .frame(height: 170)
+    }
+}
+
+/// Fa tremare il disegno sbagliato: a ogni errore `volte` cresce di 1
+struct Scuoti: GeometryEffect {
+    var volte: CGFloat
+    var animatableData: CGFloat {
+        get { volte }
+        set { volte = newValue }
+    }
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: 10 * sin(volte * .pi * 4), y: 0))
     }
 }
 
