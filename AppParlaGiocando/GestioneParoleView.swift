@@ -12,11 +12,12 @@ struct GestioneParoleView: View {
             progresso.paroleConfuse(percorso).map { ($0.parola, $0.volte) })
         let attive = gestore.tutteLeParole(percorso).filter { gestore.attiva(percorso, $0.testo) }.count
         let aggiunte = gestore.personalizzate(di: percorso)
+        let nuove = gestore.nuove(di: percorso)
 
         List {
             Section {
                 Label {
-                    Text("\(attive) parole attive. In ogni partita Pippo ne sceglie fino a 6 a caso: spegni quelle già consolidate per concentrare l'allenamento sulle coppie più difficili.")
+                    Text("\(attive) parole attive. In ogni partita Pippo ne sceglie fino a 6, partendo dalle nuove di oggi: spegni quelle già consolidate per concentrare l'allenamento sulle coppie più difficili.")
                         .font(.subheadline)
                 } icon: {
                     Image(systemName: "info.circle")
@@ -44,6 +45,18 @@ struct GestioneParoleView: View {
                 }
             }
 
+            if !nuove.isEmpty {
+                Section {
+                    ForEach(nuove) { p in
+                        RigaParola(percorso: percorso, parola: p, confusioni: confusioni[p.testo] ?? 0, nuova: true)
+                    }
+                } header: {
+                    Text("Nuove di oggi")
+                } footer: {
+                    Text("A ogni avvio dell'app Pippo pesca \(GestoreParole.nuovePerAvvio) coppie nuove dalla sua banca. Se ne spegni una, non verrà più proposta.")
+                }
+            }
+
             Section("Parole di base") {
                 ForEach(percorso.parole) { p in
                     RigaParola(percorso: percorso, parola: p, confusioni: confusioni[p.testo] ?? 0)
@@ -68,6 +81,8 @@ struct RigaParola: View {
     let percorso: Percorso
     let parola: Parola
     let confusioni: Int
+    /// Mostra l'etichetta "NUOVA" per le parole pescate oggi dalla banca
+    var nuova = false
     @ObservedObject private var gestore = GestoreParole.shared
 
     var body: some View {
@@ -80,8 +95,18 @@ struct RigaParola: View {
             HStack(spacing: 12) {
                 Text(parola.emoji).font(.title)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(parola.testo) ↔ \(parola.gemella)")
-                        .font(.body.weight(.medium))
+                    HStack(spacing: 6) {
+                        Text("\(parola.testo) ↔ \(parola.gemella)")
+                            .font(.body.weight(.medium))
+                        if nuova {
+                            Text("NUOVA")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(percorso.colore, in: Capsule())
+                        }
+                    }
                     Text(parola.frase)
                         .font(.caption)
                         .foregroundStyle(.secondary)
