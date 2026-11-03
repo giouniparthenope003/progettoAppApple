@@ -4,110 +4,104 @@ import SwiftUI
 struct LogopedistaView: View {
     @EnvironmentObject private var progresso: Progresso
     @ObservedObject private var gestore = GestoreParole.shared
-    var cambiaUtente: () -> Void = {}
     @State private var confermaAzzera = false
     @AppStorage(Suoni.chiaveAttivi) private var suoniAttivi = true
 
     var body: some View {
-        NavigationStack {
-            List {
-                if progresso.sessioni.isEmpty {
-                    Section {
-                        ContentUnavailableView(
-                            "Ancora nessuna sessione",
-                            systemImage: "chart.bar.xaxis",
-                            description: Text("I risultati compariranno qui quando il bambino avrà completato la prima sfida.")
-                        )
-                    }
-                } else {
-                    Section("Riepilogo") {
-                        LabeledContent("Sfide completate", value: "\(progresso.sessioni.count)")
-                        LabeledContent("Confusioni con la parola gemella",
-                                       value: "\(progresso.sessioni.reduce(0) { $0 + $1.confusioni })")
-                        LabeledContent("Altri errori",
-                                       value: "\(progresso.sessioni.reduce(0) { $0 + $1.altriErrori })")
-                        if let ultima = progresso.sessioni.map(\.data).max() {
-                            LabeledContent("Ultima attività",
-                                           value: ultima.formatted(date: .abbreviated, time: .shortened))
-                        }
-                    }
-                }
-
-                ForEach(Percorso.tutti) { percorso in
-                    Section {
-                        NavigationLink {
-                            GestioneParoleView(percorso: percorso)
-                        } label: {
-                            Label("Gestisci parole (\(gestore.paroleAttive(percorso).count) attive)",
-                                  systemImage: "text.badge.plus")
-                                .foregroundStyle(percorso.colore)
-                        }
-
-                        ForEach(Sfida.allCases) { sfida in
-                            SfidaRiepilogoRow(percorso: percorso, sfida: sfida)
-                        }
-
-                        let confuse = progresso.paroleConfuse(percorso)
-                        if !confuse.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Parole confuse più spesso")
-                                    .font(.subheadline.weight(.semibold))
-                                ForEach(confuse.prefix(5), id: \.parola) { voce in
-                                    HStack {
-                                        Text("\(voce.parola) → \(gestore.gemella(di: voce.parola, in: percorso))")
-                                        Spacer()
-                                        Text("×\(voce.volte)")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .font(.subheadline)
-                                }
-                            }
-                            .padding(.vertical, 4)
-                        }
-                    } header: {
-                        Text("\(percorso.emoji) \(percorso.titolo) · \(percorso.coppia)")
-                    }
-                }
-
-
-if !progresso.sessioni.isEmpty {
-                    Section {
-                        NavigationLink("Storico delle sessioni (\(progresso.sessioni.count))") {
-                            StoricoSessioniView()
-                        }
-                    }
-                }
-
+        List {
+            if progresso.sessioni.isEmpty {
                 Section {
-                    Toggle("Suoni e vibrazioni", systemImage: "speaker.wave.2.fill", isOn: $suoniAttivi)
-                } header: {
-                    Text("Impostazioni")
-                } footer: {
-                    Text("Un piccolo suono quando il bambino tocca i pulsanti e una melodia a fine sfida. Spegnili se il bambino è sensibile agli stimoli sonori: la voce di Pippo resta attiva.")
+                    ContentUnavailableView(
+                        "Ancora nessuna sessione",
+                        systemImage: "chart.bar.xaxis",
+                        description: Text("I risultati compariranno qui quando il bambino avrà completato la prima sfida.")
+                    )
                 }
-            }
-            .navigationTitle("Area logopedista")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Indietro", systemImage: "chevron.left", action: cambiaUtente)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Button("Azzera progressi", systemImage: "trash", role: .destructive) {
-                            confermaAzzera = true
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+            } else {
+                Section("Riepilogo") {
+                    LabeledContent("Sfide completate", value: "\(progresso.sessioni.count)")
+                    LabeledContent("Confusioni con la parola gemella",
+                                   value: "\(progresso.sessioni.reduce(0) { $0 + $1.confusioni })")
+                    LabeledContent("Altri errori",
+                                   value: "\(progresso.sessioni.reduce(0) { $0 + $1.altriErrori })")
+                    if let ultima = progresso.sessioni.map(\.data).max() {
+                        LabeledContent("Ultima attività",
+                                       value: ultima.formatted(date: .abbreviated, time: .shortened))
                     }
                 }
             }
-            .confirmationDialog("Azzerare tutti i progressi?",
-                                isPresented: $confermaAzzera,
-                                titleVisibility: .visible) {
-                Button("Azzera", role: .destructive) { progresso.azzera() }
-            } message: {
-                Text("Stelle e storico delle sessioni verranno cancellati definitivamente.")
+
+            ForEach(Percorso.tutti) { percorso in
+                Section {
+                    NavigationLink {
+                        GestioneParoleView(percorso: percorso)
+                    } label: {
+                        Label("Gestisci parole (\(gestore.paroleAttive(percorso).count) attive)",
+                              systemImage: "text.badge.plus")
+                            .foregroundStyle(percorso.colore)
+                    }
+
+                    ForEach(Sfida.allCases) { sfida in
+                        SfidaRiepilogoRow(percorso: percorso, sfida: sfida)
+                    }
+
+                    let confuse = progresso.paroleConfuse(percorso)
+                    if !confuse.isEmpty {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Parole confuse più spesso")
+                                .font(.subheadline.weight(.semibold))
+                            ForEach(confuse.prefix(5), id: \.parola) { voce in
+                                HStack {
+                                    Text("\(voce.parola) → \(gestore.gemella(di: voce.parola, in: percorso))")
+                                    Spacer()
+                                    Text("×\(voce.volte)")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .font(.subheadline)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                } header: {
+                    Text("\(percorso.emoji) \(percorso.titolo) · \(percorso.coppia)")
+                }
             }
+
+
+            if !progresso.sessioni.isEmpty {
+                Section {
+                    NavigationLink("Storico delle sessioni (\(progresso.sessioni.count))") {
+                        StoricoSessioniView()
+                    }
+                }
+            }
+
+            Section {
+                Toggle("Suoni e vibrazioni", systemImage: "speaker.wave.2.fill", isOn: $suoniAttivi)
+            } header: {
+                Text("Impostazioni")
+            } footer: {
+                Text("Un piccolo suono quando il bambino tocca i pulsanti e una melodia a fine sfida. Spegnili se il bambino è sensibile agli stimoli sonori: la voce di Pippo resta attiva.")
+            }
+        }
+        .navigationTitle("Area logopedista")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button("Azzera progressi", systemImage: "trash", role: .destructive) {
+                        confermaAzzera = true
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .confirmationDialog("Azzerare tutti i progressi?",
+                            isPresented: $confermaAzzera,
+                            titleVisibility: .visible) {
+            Button("Azzera", role: .destructive) { progresso.azzera() }
+        } message: {
+            Text("Stelle e storico delle sessioni verranno cancellati definitivamente.")
         }
     }
 }
@@ -195,6 +189,8 @@ VStack(alignment: .leading, spacing: 4) {
 }
 
 #Preview {
-    LogopedistaView()
-        .environmentObject(Progresso())
+    NavigationStack {
+        LogopedistaView()
+    }
+    .environmentObject(Progresso())
 }

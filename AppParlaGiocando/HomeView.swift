@@ -3,55 +3,40 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject private var progresso: Progresso
     @ObservedObject private var gestore = GestoreParole.shared
-    var cambiaUtente: () -> Void = {}
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 22) {
-                    // Torna alla scelta tra genitore e logopedista
-                    HStack {
-                        Button(action: cambiaUtente) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(.primary)
-                                .frame(width: 44, height: 44)
-                                .background(.white.opacity(0.8), in: Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-                        }
-                        .accessibilityLabel("Indietro")
-                        Spacer()
-                    }
-
-                    HStack(spacing: 12) {
-                        PippoView(altezza: 110)
-                        Text("Ciao! Sono Pippo.\nAiutami a tornare a casa!")
-                            .font(Tema.titolo(28))
-                            .minimumScaleFactor(0.7)
-                    }
-                    .padding(.top, 8)
-
-                    ForEach(Percorso.tutti) { percorso in
-                        NavigationLink {
-                            PercorsoView(percorso: gestore.perIlGioco(percorso))
-                        } label: {
-                            PercorsoCard(
-                                percorso: percorso,
-                                stelle: progresso.totaleStelle(percorso)
-                            )
-                        }
-                        .buttonStyle(StilePremuto())
-                    }
+        ScrollView {
+            VStack(spacing: 22) {
+                HStack(spacing: 12) {
+                    PippoView(altezza: 110)
+                    Text("Ciao! Sono Pippo.\nAiutami a tornare a casa!")
+                        .font(Tema.titolo(28))
+                        .minimumScaleFactor(0.7)
                 }
-                .padding()
+                .padding(.top, 8)
+
+                ForEach(Percorso.tutti) { percorso in
+                    NavigationLink {
+                        PercorsoView(percorso: gestore.perIlGioco(percorso))
+                    } label: {
+                        PercorsoCard(
+                            percorso: percorso,
+                            stelle: progresso.totaleStelle(percorso)
+                        )
+                    }
+                    .buttonStyle(StilePremuto())
+                }
             }
-            .background(
-                LinearGradient(colors: [Color.cyan.opacity(0.4), Color.yellow.opacity(0.15), .white],
-                               startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
-            )
-            .toolbar(.hidden, for: .navigationBar)
+            .padding()
         }
+        .background(
+            LinearGradient(colors: [Color.cyan.opacity(0.4), Color.yellow.opacity(0.15), .white],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+        )
+        // Barra trasparente: resta il pulsante indietro di sistema (e lo swipe da sinistra)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
