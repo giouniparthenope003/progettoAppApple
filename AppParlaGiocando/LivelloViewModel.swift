@@ -261,7 +261,8 @@ final class Speaker: ObservableObject {
     /// La sessione si configura una sola volta: riattivarla a ogni parola taglia l'audio.
     private static var audioPronto = false
 
-    private static func preparaAudio() {
+    /// Usata anche dai suoni dei pulsanti (Suoni.swift)
+    static func preparaAudio() {
         let sessione = AVAudioSession.sharedInstance()
         if !audioPronto || sessione.category != .playAndRecord {
             try? sessione.setCategory(.playAndRecord, mode: .default,
