@@ -26,6 +26,10 @@ final class Suoni {
     func suona(_ effetto: Effetto) {
         guard attivi else { return }
 
+        // Stessa impostazione audio della voce di Pippo: si sente anche con
+        // l'iPhone in modalità silenziosa e dall'altoparlante principale
+        Speaker.preparaAudio()
+
         if let player = player[effetto] ?? carica(effetto) {
             player.currentTime = 0
             player.play()
@@ -48,7 +52,7 @@ final class Suoni {
         guard let asset = NSDataAsset(name: "suono-\(effetto.rawValue)"),
               let nuovo = try? AVAudioPlayer(data: asset.data, fileTypeHint: AVFileType.wav.rawValue)
         else { return nil }
-        nuovo.volume = effetto == .tocco ? 0.45 : 0.8
+        nuovo.volume = effetto == .tocco ? 0.7 : 0.9
         nuovo.prepareToPlay()
         player[effetto] = nuovo
         return nuovo
