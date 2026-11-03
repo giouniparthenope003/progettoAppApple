@@ -13,28 +13,22 @@ struct PippoApp: App {
     }
 }
 
-/// All'avvio chiede chi sta usando l'app, poi mostra la parte giusta
+/// All'avvio chiede chi sta usando l'app, poi apre la parte giusta.
+/// Un'unica navigazione: si torna indietro con il pulsante o con lo swipe da sinistra.
 struct RootView: View {
-    @State private var utente: Utente?
+    @State private var schermate: [Utente] = []
 
     var body: some View {
-        ZStack {
-            if let utente {
-                switch utente {
-                case .genitore:
-                    HomeView(cambiaUtente: esci)
-                case .logopedista:
-                    LogopedistaView(cambiaUtente: esci)
+        NavigationStack(path: $schermate) {
+            SceltaUtenteView { scelto in schermate = [scelto] }
+                .navigationTitle("Inizio")
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: Utente.self) { utente in
+                    switch utente {
+                    case .genitore:    HomeView()
+                    case .logopedista: LogopedistaView()
+                    }
                 }
-            } else {
-                SceltaUtenteView { scelto in
-                    withAnimation { utente = scelto }
-                }
-            }
         }
-    }
-
-    private func esci() {
-        withAnimation { utente = nil }
     }
 }
