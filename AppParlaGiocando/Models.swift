@@ -16,6 +16,10 @@ struct Percorso: Identifiable {
     let emoji: String
     let colore: Color
     let parole: [Parola]
+    /// Banca di coppie in più: a ogni avvio Pippo ne pesca alcune nuove (vedi GestoreParole)
+    var riserva: [Parola] = []
+    /// Le parole nuove pescate a questo avvio, da proporre per prime nelle partite
+    var novita: Set<String> = []
 
     var id: String { titolo }   // stabile: serve per salvare i progressi
 }
@@ -80,6 +84,14 @@ extension Percorso {
             Parola(testo: "pollo", gemella: "bollo", emoji: "🍗", frase: "Il pollo è caldo"),
             Parola(testo: "panda", gemella: "banda", emoji: "🐼", frase: "Il panda mangia"),
             Parola(testo: "pizza", gemella: "bizza", emoji: "🍕", frase: "Che buona la pizza")
+        ], riserva: [
+            Parola(testo: "bacca", gemella: "pacca", emoji: "🫐", frase: "La bacca è blu"),
+            Parola(testo: "bolla", gemella: "polla", emoji: "🫧", frase: "La bolla vola"),
+            Parola(testo: "passo", gemella: "basso", emoji: "👣", frase: "Faccio un passo"),
+            Parola(testo: "becco", gemella: "pecco", emoji: "🐤", frase: "Il pulcino apre il becco"),
+            Parola(testo: "polo",  gemella: "bolo",  emoji: "🧊", frase: "Al polo fa freddo"),
+            Parola(testo: "pacco", gemella: "bacco", emoji: "📦", frase: "Apro il pacco"),
+            Parola(testo: "batto", gemella: "patto", emoji: "🥁", frase: "Batto il tamburo")
         ]),
         Percorso(titolo: "Bosco T/D", coppia: "T / D", emoji: "🌲", colore: .green, parole: [
             Parola(testo: "topo",  gemella: "dopo",  emoji: "🐭", frase: "Il topo corre"),
@@ -89,6 +101,15 @@ extension Percorso {
             Parola(testo: "tetto", gemella: "detto", emoji: "🏠", frase: "Il tetto è rosso"),
             Parola(testo: "dito",  gemella: "tito",  emoji: "👆", frase: "Muovo il dito"),
             Parola(testo: "moto",  gemella: "modo",  emoji: "🏍️", frase: "La moto va forte")
+        ], riserva: [
+            Parola(testo: "dado",  gemella: "dato",  emoji: "🎲", frase: "Tiro il dado"),
+            Parola(testo: "tondo", gemella: "tonto", emoji: "⚪️", frase: "Il cerchio è tondo"),
+            Parola(testo: "nodo",  gemella: "noto",  emoji: "🪢", frase: "Faccio un nodo"),
+            Parola(testo: "vento", gemella: "vendo", emoji: "🌬️", frase: "Il vento soffia"),
+            Parola(testo: "tenda", gemella: "tenta", emoji: "⛺️", frase: "La tenda è verde"),
+            Parola(testo: "sete",  gemella: "sede",  emoji: "🥤", frase: "Ho tanta sete"),
+            Parola(testo: "mondo", gemella: "monto", emoji: "🌍", frase: "Il mondo è grande"),
+            Parola(testo: "onda",  gemella: "onta",  emoji: "🌊", frase: "L'onda è alta")
         ]),
         Percorso(titolo: "Montagna S/Z", coppia: "S / Z", emoji: "🏔️", colore: .orange, parole: [
             Parola(testo: "tazza", gemella: "tassa", emoji: "☕️", frase: "La tazza è piena"),
@@ -98,6 +119,14 @@ extension Percorso {
             Parola(testo: "rosa",  gemella: "rossa", emoji: "🌹", frase: "La rosa profuma"),
             Parola(testo: "casa",  gemella: "cassa", emoji: "🏡", frase: "La casa è grande"),
             Parola(testo: "gazza", gemella: "gassa", emoji: "🐦", frase: "La gazza vola")
+        ], riserva: [
+            Parola(testo: "orso",   gemella: "orzo",   emoji: "🐻", frase: "L'orso dorme"),
+            Parola(testo: "terzo",  gemella: "terso",  emoji: "🥉", frase: "Arrivo terzo"),
+            Parola(testo: "mazzo",  gemella: "masso",  emoji: "💐", frase: "Un mazzo di fiori"),
+            Parola(testo: "mazza",  gemella: "massa",  emoji: "🏏", frase: "La mazza colpisce la palla"),
+            Parola(testo: "lasso",  gemella: "lazzo",  emoji: "🤠", frase: "Il cowboy lancia il lasso"),
+            Parola(testo: "pozza",  gemella: "possa",  emoji: "💧", frase: "Salto nella pozza"),
+            Parola(testo: "spazzo", gemella: "spasso", emoji: "🧹", frase: "Spazzo il pavimento")
         ])
     ]
 }

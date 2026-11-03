@@ -23,9 +23,15 @@ final class GestoreParole: ObservableObject {
     @Published private(set) var personalizzate: [ParolaPersonalizzata] = []
     /// Parole spente, salvate come "percorso|parola"
     @Published private(set) var escluse: Set<String> = []
+    /// Le parole nuove pescate dalla banca a questo avvio, per percorso
+    @Published private(set) var nuoveDiOggi: [String: [String]] = [:]
+
+    /// Quante parole nuove Pippo pesca dalla banca di ogni percorso a ogni avvio
+    static let nuovePerAvvio = 4
 
     private let chiavePersonalizzate = "parole.personalizzate"
     private let chiaveEscluse = "parole.escluse"
+    private let chiaveUscite = "parole.giaUscite"
 
     private init() {
         let defaults = UserDefaults.standard
@@ -36,6 +42,7 @@ final class GestoreParole: ObservableObject {
         if let lista = defaults.stringArray(forKey: chiaveEscluse) {
             escluse = Set(lista)
         }
+        pescaNuoveParole()
     }
 
     // MARK: Lettura
@@ -44,9 +51,25 @@ final class GestoreParole: ObservableObject {
         personalizzate.filter { $0.percorsoId == p.id }
     }
 
-    /// Tutte le parole del percorso: quelle di base più quelle aggiunte
+    /// Le parole nuove di questo avvio per il percorso
+    func nuove(di p: Percorso) -> [Parola] {
+        let testi = nuoveDiOggi[p.id] ?? []
+        return banca(p).filter { testi.contains($0.testo) }
+    }
+
+    /// Tutte le parole del percorso in gioco oggi: base, nuove di oggi e aggiunte
     func tutteLeParole(_ p: Percorso) -> [Parola] {
-        p.parole + personalizzate(di: p).map(\.parola)
+        p.parole + nuove(di: p) + personalizzate(di: p).map(\.parola)
+    }
+
+    /// Tutte le parole conosciute del percorso, anche quelle della banca non uscite oggi
+    private func catalogo(_ p: Percorso) -> [Parola] {
+        p.parole + banca(p) + personalizzate(di: p).map(\.parola)
+    }
+
+    /// La banca del percorso (cercata per id, così funziona con qualunque copia del percorso)
+    private func banca(_ p: Percorso) -> [Parola] {
+        Percorso.tutti.first { $0.id == p.id }?.riserva ?? p.riserva
     }
 
     func attiva(_ p: Percorso, _ testo: String) -> Bool {
@@ -61,17 +84,18 @@ final class GestoreParole: ObservableObject {
 
     /// Il percorso con le sole parole attive, pronto per il gioco
     func perIlGioco(_ p: Percorso) -> Percorso {
-        Percorso(titolo: p.titolo, coppia: p.coppia, emoji: p.emoji,
-                 colore: p.colore, parole: paroleAttive(p))
+        let novita = Set(nuove(di: p).map(\.testo).filter { attiva(p, $0) })
+        return Percorso(titolo: p.titolo, coppia: p.coppia, emoji: p.emoji,
+                        colore: p.colore, parole: paroleAttive(p), novita: novita)
     }
 
     func gemella(di testo: String, in p: Percorso) -> String {
-        tutteLeParole(p).first { $0.testo == testo }?.gemella ?? "?"
+        catalogo(p).first { $0.testo == testo }?.gemella ?? "?"
     }
 
     func esiste(_ testo: String, in p: Percorso) -> Bool {
         let t = testo.normalizzata
-        return tutteLeParole(p).contains { $0.testo.normalizzata == t }
+        return catalogo(p).contains { $0.testo.normalizzata == t }
     }
 
     // MARK: Modifica
@@ -98,6 +122,33 @@ final class GestoreParole: ObservableObject {
     // MARK: Interni
 
     private func chiave(_ p: Percorso, _ testo: String) -> String { "\(p.id)|\(testo)" }
+
+    /// A ogni avvio pesca alcune parole nuove dalla banca di ogni percorso.
+    /// Prima di ripetere una parola già uscita, fa girare tutta la banca.
+    /// Le parole spente dal logopedista non vengono più pescate.
+    private func pescaNuoveParole() {
+        let defaults = UserDefaults.standard
+        var uscite = (defaults.dictionary(forKey: chiaveUscite) as? [String: [String]]) ?? [:]
+        let quante = Self.nuovePerAvvio
+
+        for p in Percorso.tutti where !p.riserva.isEmpty {
+            let disponibili = p.riserva.map(\.testo).filter { attiva(p, $0) }
+            var giaUscite = Set(uscite[p.id] ?? [])
+
+            var scelte = Array(disponibili.filter { !giaUscite.contains($0) }.shuffled().prefix(quante))
+            if scelte.count < quante {
+                // Banca finita: ricomincia il giro con le parole che mancano
+                giaUscite = []
+                let altre = disponibili.filter { !scelte.contains($0) }.shuffled()
+                scelte += altre.prefix(quante - scelte.count)
+            }
+
+            giaUscite.formUnion(scelte)
+            nuoveDiOggi[p.id] = scelte
+            uscite[p.id] = Array(giaUscite)
+        }
+        defaults.set(uscite, forKey: chiaveUscite)
+    }
 
     private func salva() {
         let defaults = UserDefaults.standard

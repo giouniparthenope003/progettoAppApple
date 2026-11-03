@@ -30,12 +30,21 @@ final class LivelloViewModel: ObservableObject {
 
     private var tentativiParola = 0
     private var pausa: Task<Void, Never>?
-    private let paroleAPartita = 6
+    private static let paroleAPartita = 6
+    /// Quante parole nuove di oggi entrano in ogni partita
+    private static let nuoveAPartita = 3
 
     init(percorso: Percorso, sfida: Sfida) {
         self.percorso = percorso
         self.sfida = sfida
-        self.parole = Array(percorso.parole.shuffled().prefix(paroleAPartita))
+        self.parole = Self.scegliParole(percorso)
+    }
+
+    /// Le parole della partita: prima alcune delle novità di oggi, poi le altre a caso
+    private static func scegliParole(_ p: Percorso) -> [Parola] {
+        let nuove = p.parole.filter { p.novita.contains($0.testo) }.shuffled().prefix(nuoveAPartita)
+        let altre = p.parole.filter { !p.novita.contains($0.testo) }.shuffled()
+        return Array((Array(nuove) + altre).prefix(paroleAPartita)).shuffled()
     }
 
     // MARK: Stato
@@ -163,7 +172,7 @@ final class LivelloViewModel: ObservableObject {
 
     func ricomincia() {
         pausa?.cancel()
-        parole = Array(percorso.parole.shuffled().prefix(paroleAPartita))
+        parole = Self.scegliParole(percorso)
         indice = 0
         confusioniConGemella = 0
         altriErrori = 0
