@@ -10,6 +10,12 @@ struct Parola: Identifiable {
     let frase: String      // frasetta che contiene la parola (per la sfida 4)
     /// Disegno della gemella: serve per la sfida "Quale hai sentito?" (nil = non disegnabile)
     var emojiGemella: String? = nil
+    /// In alternativa all'emoji: nome di una foto o di un disegno in Assets.xcassets
+    /// (es. "gemella-panca"). Se c'è, ha la precedenza sull'emoji.
+    var immagineGemella: String? = nil
+
+    /// La coppia si può usare in "Quale hai sentito?" (la gemella ha un'emoji o un'immagine)
+    var haDisegnoGemella: Bool { emojiGemella != nil || immagineGemella != nil }
 }
 
 struct Percorso: Identifiable {
