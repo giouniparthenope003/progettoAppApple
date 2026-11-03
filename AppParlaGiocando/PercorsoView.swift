@@ -24,7 +24,7 @@ struct PercorsoView: View {
                             stelle: progresso.stelleOttenute(percorso, sfida)
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(StilePremuto())
                     .disabled(!sbloccata)
                 }
             }

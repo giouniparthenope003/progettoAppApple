@@ -162,6 +162,8 @@ struct LevelView: View {
             if speech.isRecording { OndePulsanti() }
 
             Button {
+                // Solo vibrazione: un suono verrebbe catturato dal microfono
+                Suoni.shared.vibra()
                 if speech.isRecording {
                     speech.stopRecording()
                 } else {
@@ -229,7 +231,11 @@ struct CompletatoView: View {
 
             ConfettiView()
         }
-        .onAppear { apparso = true }
+        .onAppear {
+            apparso = true
+            // Le tre campanelle partono insieme alle stelle
+            Suoni.shared.suona(.vittoria)
+        }
     }
 }
 

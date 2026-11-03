@@ -42,6 +42,9 @@ struct PillolaStile: ButtonStyle {
             .shadow(color: colore.opacity(0.4), radius: 6, y: 4)
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
             .animation(.spring(response: 0.25), value: configuration.isPressed)
+            .onChange(of: configuration.isPressed) { _, premuto in
+                if premuto { Suoni.shared.suona(.tocco) }
+            }
     }
 }
 
