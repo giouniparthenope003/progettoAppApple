@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LevelView: View {
     @EnvironmentObject private var progresso: Progresso
@@ -182,6 +183,8 @@ struct LevelView: View {
     private func cartaDisegno(gemella: Bool) -> some View {
         let parola = livello.parola
         let emoji = gemella ? (parola.emojiGemella ?? "❓") : parola.emoji
+        // Per la gemella si può usare una foto/disegno in Assets al posto dell'emoji
+        let immagine = gemella ? parola.immagineGemella.flatMap { UIImage(named: $0) } : nil
         let giusta = gemella == livello.diceGemellaOra
         let toccataQui = toccata == gemella
         // Il disegno giusto si illumina quando il bambino indovina o quando si passa oltre
@@ -192,8 +195,17 @@ struct LevelView: View {
             toccata = gemella
             livello.tocca(gemella: gemella)
         } label: {
-            Text(emoji)
-                .font(.system(size: 96))
+            Group {
+                if let immagine {
+                    Image(uiImage: immagine)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 130, height: 130)
+                        .clipShape(RoundedRectangle(cornerRadius: 22))
+                } else {
+                    Text(emoji).font(.system(size: 96))
+                }
+            }
                 .frame(maxWidth: .infinity, minHeight: 170)
                 .background(livello.percorso.colore.opacity(0.12), in: RoundedRectangle(cornerRadius: 28))
                 .overlay(

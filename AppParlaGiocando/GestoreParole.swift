@@ -89,7 +89,7 @@ final class GestoreParole: ObservableObject {
         let novita = Set(nuove(di: p).map(\.testo).filter { attiva(p, $0) })
         // Per "Quale hai sentito?" servono due disegni: si usano tutte le coppie attive
         // che li hanno, anche quelle della banca non uscite oggi (sono poche)
-        let illustrate = catalogo(p).filter { $0.emojiGemella != nil && attiva(p, $0.testo) }
+        let illustrate = catalogo(p).filter { $0.haDisegnoGemella && attiva(p, $0.testo) }
         return Percorso(titolo: p.titolo, coppia: p.coppia, emoji: p.emoji,
                         colore: p.colore, parole: paroleAttive(p), novita: novita,
                         coppieIllustrate: illustrate)
